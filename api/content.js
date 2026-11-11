@@ -1,10 +1,11 @@
 import { json, requireAdmin } from "../lib/auth.js";
 import { normalize } from "../lib/schema.js";
-import { readContent, writeContent, HttpError } from "../lib/store.js";
+import { readContent, writeContent, useRequestOidc, HttpError } from "../lib/store.js";
 
 const MAX_BYTES = 2_000_000;
 
 export async function GET(request) {
+  useRequestOidc(request);
   try {
     const content = await readContent();
     const fresh = new URL(request.url).searchParams.has("fresh");
@@ -18,6 +19,7 @@ export async function GET(request) {
 }
 
 export async function PUT(request) {
+  useRequestOidc(request);
   const denied = requireAdmin(request);
   if (denied) return denied;
   try {

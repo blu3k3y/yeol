@@ -1,11 +1,12 @@
 import { json, requireAdmin } from "../lib/auth.js";
-import { saveUpload, HttpError } from "../lib/store.js";
+import { saveUpload, useRequestOidc, HttpError } from "../lib/store.js";
 
 // Vercel 함수 요청 본문 한도(4.5MB) 안쪽. 큰 이미지는 브라우저에서 줄여서 보냅니다.
 const MAX_BYTES = 4_400_000;
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
 
 export async function POST(request) {
+  useRequestOidc(request);
   const denied = requireAdmin(request);
   if (denied) return denied;
 

@@ -24,7 +24,7 @@
 
 1. 저장소 Import → Application Preset `Other` → Deploy
 2. 프로젝트 → **Storage** → **Create** → **Blob** (접근 권한 Public) → 이 프로젝트에 연결
-   → `BLOB_READ_WRITE_TOKEN` 이 자동으로 추가됩니다.
+   → `BLOB_READ_WRITE_TOKEN` 또는 `BLOB_STORE_ID` 가 자동으로 추가됩니다.
 3. **Settings → Environment Variables** 에 추가
    - `ADMIN_PASSWORD`: 관리자 비밀번호 (길고 추측하기 어렵게)
    - `SESSION_SECRET`: 아무 긴 임의 문자열 (선택, 바꾸면 모든 로그인 해제)
