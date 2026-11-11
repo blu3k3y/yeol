@@ -43,12 +43,12 @@ function media(src, alt, ratio, { eager = false, label = "IMAGE" } = {}) {
 }
 
 // 자르지 않은 원본 비율 그대로 (화면 높이를 넘으면 전체가 보이게 축소)
-function original(src, alt, ratio, label) {
+function original(src, alt, ratio, label, eager = true) {
   if (!src) return media("", alt, ratio || "4/3", { label });
   const [w, h] = String(ratio || "").split("/").map(Number);
   const size = w && h ? `width="${Math.round(w)}" height="${Math.round(h)}"` : "";
   return `<figure class="original">
-    <img src="${esc(src)}" alt="${esc(alt)}" ${size} fetchpriority="high" decoding="async" />
+    <img src="${esc(src)}" alt="${esc(alt)}" ${size} ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" />
   </figure>`;
 }
 
@@ -162,8 +162,8 @@ function viewProjectDetail(id) {
   if (i < 0) return viewNotFound();
   const p = projects[i];
   document.title = `${p.title} — ${site.name}`;
-  const imgs = (p.images && p.images.length ? p.images : [{ src: p.cover, alt: p.title, ratio: "940/542" }])
-    .map((im, k) => media(im.src, im.alt || p.title, im.ratio || "940/542", { eager: k === 0, label: p.title }))
+  const imgs = (p.images && p.images.length ? p.images : [{ src: p.cover, alt: p.title, ratio: p.coverRatio }])
+    .map((im, k) => original(im.src, im.alt || p.title, im.ratio, p.title, k === 0))
     .join("");
   return `<article class="page page--detail">
     <a class="detail__back" href="/projects" data-link>${arrowLeft}PROJECT</a>
