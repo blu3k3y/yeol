@@ -1,5 +1,6 @@
 import * as defaults from "./data.js";
 import { openSheet, closeSheet, isSheetOpen } from "./sheet.js";
+import { initSmoothScroll, scrollToTop } from "./scroll.js";
 
 // 관리자 페이지에서 저장한 콘텐츠(/api/content)를 우선 사용, 없으면 data.js 기본값
 let site = defaults.site;
@@ -326,14 +327,14 @@ document.addEventListener("click", (e) => {
     closeSheet({ instant: true });
     history.replaceState(null, "", url.pathname); // 시트 주소를 새 주소로 교체
     render({ focus: true });
-    window.scrollTo(0, 0);
+    scrollToTop();
     return;
   }
 
   if (url.pathname !== location.pathname) {
     history.pushState(null, "", url.pathname);
     render({ focus: true });
-    window.scrollTo(0, 0);
+    scrollToTop();
   }
 });
 
@@ -350,3 +351,4 @@ window.addEventListener("popstate", () => {
 await loadContent();
 initShell();
 render();
+initSmoothScroll();

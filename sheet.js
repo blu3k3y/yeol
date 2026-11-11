@@ -1,6 +1,7 @@
 // iOS App Store 스타일: 목록의 카드를 누르면 이미지가 그대로 커지면서 상세 시트가 열리고,
 // 닫으면 원래 카드 자리로 줄어들어 돌아갑니다. (Motion animateLayout + data-layout-id)
 import { loadMotion, prefersReducedMotion } from "./motion.js";
+import { stopScroll, startScroll } from "./scroll.js";
 
 const LAYOUT_ID = "sheet-media";
 const SPRING = { type: "spring", bounce: 0.12, visualDuration: 0.5 };
@@ -54,7 +55,7 @@ export async function openSheet({ tile, html, labelId, onRequestClose }) {
   root.className = "sheet";
   root.innerHTML = `
     <div class="sheet__backdrop"></div>
-    <div class="sheet__scroll">
+    <div class="sheet__scroll" data-lenis-prevent>
       <article class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="${labelId}" tabindex="-1">
         <button class="sheet__close" type="button" data-sheet-close data-sheet-fade aria-label="닫기">${closeIcon}</button>
         ${html}
@@ -73,6 +74,7 @@ export async function openSheet({ tile, html, labelId, onRequestClose }) {
   document.addEventListener("keydown", onKey);
 
   const mount = () => {
+    stopScroll();
     document.documentElement.classList.add("sheet-open");
     tile.classList.add("is-sheet-source");
     document.body.append(root);
@@ -116,6 +118,7 @@ export async function closeSheet({ instant = false } = {}) {
   const finish = () => {
     o.root.remove();
     document.documentElement.classList.remove("sheet-open");
+    startScroll();
     o.tile.classList.remove("is-sheet-source");
     o.fromMedia?.removeAttribute("data-layout-id");
     if (o.tile.isConnected) o.tile.focus({ preventScroll: true });
