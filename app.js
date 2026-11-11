@@ -42,6 +42,16 @@ function media(src, alt, ratio, { eager = false, label = "IMAGE" } = {}) {
   </div>`;
 }
 
+// 자르지 않은 원본 비율 그대로 (화면 높이를 넘으면 전체가 보이게 축소)
+function original(src, alt, ratio, label) {
+  if (!src) return media("", alt, ratio || "4/3", { label });
+  const [w, h] = String(ratio || "").split("/").map(Number);
+  const size = w && h ? `width="${Math.round(w)}" height="${Math.round(h)}"` : "";
+  return `<figure class="original">
+    <img src="${esc(src)}" alt="${esc(alt)}" ${size} fetchpriority="high" decoding="async" />
+  </figure>`;
+}
+
 function tags(list = []) {
   if (!list.length) return "";
   return `<ul class="tags" aria-label="태그">${list.map((t) => `<li class="tag">${esc(t)}</li>`).join("")}</ul>`;
@@ -139,7 +149,7 @@ function viewGalleryDetail(id) {
   document.title = `${g.title} — ${site.name}`;
   return `<article class="page page--detail">
     <a class="detail__back" href="/gallery" data-link>${arrowLeft}GALLERY</a>
-    <div class="detail__media">${media(g.image, g.title, g.detailRatio || "901/545", { eager: true, label: g.title })}</div>
+    <div class="detail__media">${original(g.image, g.title, g.ratio, g.title)}</div>
     <h1 class="detail__title">${esc(g.title)}</h1>
     ${tags(g.tags)}
     ${g.description ? `<p class="detail__desc">${esc(g.description)}</p>` : ""}

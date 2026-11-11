@@ -365,6 +365,16 @@ a {
   flex-direction: column;
   gap: 20px;
 }
+.original {
+  margin: 0;
+}
+.original img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 160px);
+  max-height: calc(100dvh - 160px);
+}
 .detail__title {
   margin: 36px 0 0;
   font-size: 28px;
