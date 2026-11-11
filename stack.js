@@ -2,7 +2,7 @@
 // - 맨 위 카드를 좌우로 던지면 다음 카드, 탭/클릭해도 다음 카드
 // - 이전/다음 버튼, 키보드 ←/→ 지원
 // - Motion 을 못 불러오면 애니메이션 없이 버튼으로만 동작
-const MOTION_URL = "https://cdn.jsdelivr.net/npm/motion@14.7.1/+esm";
+import { loadMotion, prefersReducedMotion } from "./motion.js";
 
 const ROTATE = [0, -3, 2.5, -1.5];
 const VISIBLE = 4; // 보이는 카드 수 (나머지는 투명하게 뒤에)
@@ -13,11 +13,11 @@ export async function mountStack(root, { onChange } = {}) {
   const n = els.length;
   if (!n) return () => {};
 
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduce = prefersReducedMotion();
   let destroyed = false;
   let M = null;
   try {
-    M = await import(MOTION_URL);
+    M = await loadMotion();
   } catch {
     M = null; // 오프라인/차단 → 정적 모드
   }

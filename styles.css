@@ -27,6 +27,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable; /* 시트가 열려 스크롤을 막아도 화면이 옆으로 밀리지 않게 */
+}
+html.sheet-open {
+  overflow: hidden;
 }
 
 body {
@@ -209,8 +213,8 @@ a {
   display: block;
   position: relative;
 }
-.tile .media img,
-.tile .media {
+/* .media 자체에는 transform 전환을 두지 않음 — App Store 시트의 레이아웃 애니메이션과 충돌 */
+.tile .media img {
   transition: transform 500ms var(--ease-out), opacity 400ms ease;
 }
 .tile:hover .media img.is-loaded {
@@ -524,6 +528,64 @@ a {
   color: var(--c-text-soft);
 }
 
+/* ───────── App Store 시트 (목록 위에 열리는 상세) ───────── */
+
+.is-sheet-source .media {
+  visibility: hidden;
+}
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+.sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.sheet__scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sheet__panel {
+  position: relative;
+  max-width: 988px;
+  margin: 72px auto 120px;
+  padding: 0 24px;
+  outline: none;
+}
+.sheet__media .original img {
+  max-height: calc(100vh - 200px);
+  max-height: calc(100dvh - 200px);
+}
+.sheet__close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #e3e3e3;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--c-fg);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.sheet__close:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.sheet__close:active {
+  transform: scale(0.94);
+}
+
 /* ───────── Responsive ───────── */
 
 @media (max-width: 1100px) {
@@ -650,6 +712,14 @@ a {
   .detail__desc {
     margin-left: 0;
     font-size: 16px;
+  }
+  .sheet__panel {
+    margin: 72px auto 80px;
+    padding: 0 16px;
+  }
+  .sheet__close {
+    top: 14px;
+    right: 14px;
   }
 }
 

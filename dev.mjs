@@ -33,7 +33,10 @@ const TYPES = {
 
 async function sendFile(res, file) {
   const body = await fs.readFile(file);
-  res.writeHead(200, { "content-type": TYPES[path.extname(file).toLowerCase()] || "application/octet-stream" });
+  res.writeHead(200, {
+    "content-type": TYPES[path.extname(file).toLowerCase()] || "application/octet-stream",
+    "cache-control": "no-store", // 개발 중 수정한 파일이 바로 반영되게
+  });
   res.end(body);
 }
 

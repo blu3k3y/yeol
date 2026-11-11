@@ -1,4 +1,5 @@
 import * as defaults from "./data.js";
+import { openSheet, closeSheet, isSheetOpen } from "./sheet.js";
 
 // 관리자 페이지에서 저장한 콘텐츠(/api/content)를 우선 사용, 없으면 data.js 기본값
 let site = defaults.site;
@@ -122,7 +123,7 @@ function viewGallery() {
 
   gallery.forEach((item, i) => {
     const target = heights[0] <= heights[1] ? 0 : 1;
-    cols[target].push(`<a class="tile" href="/gallery/${esc(item.id)}" data-link aria-label="${esc(item.title)}">
+    cols[target].push(`<a class="tile" href="/gallery/${esc(item.id)}" data-link data-sheet="gallery:${esc(item.id)}" aria-label="${esc(item.title)}">
       ${media(item.image, item.title, item.ratio, { eager: i < 2, label: item.title })}
     </a>`);
     heights[target] += ratioValue(item.ratio);
@@ -144,7 +145,7 @@ function viewGallery() {
 
 function viewProjects() {
   document.title = `PROJECT — ${site.name}`;
-  const card = (p, i) => `<a class="tile" href="/projects/${esc(p.id)}" data-link style="--i:${i}">
+  const card = (p, i) => `<a class="tile" href="/projects/${esc(p.id)}" data-link data-sheet="projects:${esc(p.id)}" style="--i:${i}">
     ${media(p.cover, p.title, p.coverRatio || "350/520", { eager: i < 2, label: p.title })}
     <span class="tile__caption"><span>${esc(p.title)}</span><span>${esc(p.year || "")}</span></span>
   </a>`;
@@ -212,6 +213,31 @@ function viewProjectDetail(id) {
   </article>`;
 }
 
+// App Store 시트 본문 (목록 위에 열리는 상세)
+function sheetHtml(kind, id) {
+  const item = (kind === "gallery" ? gallery : projects).find((x) => x.id === id);
+  if (!item) return null;
+  const isProject = kind === "projects";
+  const src = isProject ? item.cover : item.image;
+  const ratio = isProject ? item.coverRatio : item.ratio;
+  const extra = isProject
+    ? (item.images || [])
+        .filter((im) => im.src)
+        .map((im) => original(im.src, im.alt || item.title, im.ratio, item.title, false))
+        .join("")
+    : "";
+  return {
+    title: item.title,
+    html: `<div class="sheet__media">${original(src, item.title, ratio, item.title)}</div>
+      <div class="sheet__body" data-sheet-fade>
+        <h2 class="detail__title" id="sheet-title">${esc(item.title)}</h2>
+        ${tags(item.tags)}
+        ${item.description ? `<p class="detail__desc">${esc(item.description)}</p>` : ""}
+        ${extra ? `<div class="detail__media detail__media--after">${extra}</div>` : ""}
+      </div>`,
+  };
+}
+
 function viewNotFound() {
   document.title = `404 — ${site.name}`;
   return `<section class="page">
@@ -268,12 +294,42 @@ function render({ focus = false } = {}) {
   if (focus) main.focus({ preventScroll: true });
 }
 
+let titleBeforeSheet = "";
+
+function showSheet(tile, path) {
+  const [kind, id] = tile.dataset.sheet.split(":");
+  const sheet = sheetHtml(kind, id);
+  if (!sheet) return false;
+  history.pushState({ sheet: true }, "", path);
+  titleBeforeSheet = document.title;
+  document.title = `${sheet.title} — ${site.name}`;
+  openSheet({
+    tile,
+    html: sheet.html,
+    labelId: "sheet-title",
+    onRequestClose: () => history.back(),
+  });
+  return true;
+}
+
 document.addEventListener("click", (e) => {
   const a = e.target.closest("a[data-link]");
   if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
   const url = new URL(a.href);
   if (url.origin !== location.origin) return;
   e.preventDefault();
+
+  // 목록의 카드 → 목록 위에 App Store 시트로 열기
+  if (a.dataset.sheet && !isSheetOpen() && showSheet(a, url.pathname)) return;
+
+  if (isSheetOpen()) {
+    closeSheet({ instant: true });
+    history.replaceState(null, "", url.pathname); // 시트 주소를 새 주소로 교체
+    render({ focus: true });
+    window.scrollTo(0, 0);
+    return;
+  }
+
   if (url.pathname !== location.pathname) {
     history.pushState(null, "", url.pathname);
     render({ focus: true });
@@ -281,7 +337,15 @@ document.addEventListener("click", (e) => {
   }
 });
 
-window.addEventListener("popstate", () => render());
+window.addEventListener("popstate", () => {
+  // 시트가 열린 상태에서 뒤로 가기 → 목록은 그대로 두고 시트만 닫기
+  if (isSheetOpen()) {
+    document.title = titleBeforeSheet;
+    closeSheet();
+    return;
+  }
+  render();
+});
 
 await loadContent();
 initShell();
