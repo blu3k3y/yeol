@@ -224,7 +224,7 @@ function panelProjects() {
       <h2>프로젝트 <span class="card__num">${list.length}개</span></h2>
       <button class="btn btn--primary btn--sm" type="button" data-action="add" data-list="projects">+ 프로젝트 추가</button>
     </div>
-    <p class="panel__hint">표지는 목록 카드에, 상세 이미지는 프로젝트 상세 화면에 차례로 보입니다.</p>
+    <p class="panel__hint">표지는 목록 카드와 상세 화면 맨 위에, 상세 이미지는 상세 화면의 설명 아래에 차례로 보입니다.</p>
     ${list.length ? "" : `<div class="empty">아직 프로젝트가 없습니다. “프로젝트 추가”를 눌러 시작하세요.</div>`}
     ${list
       .map((p, i) => {

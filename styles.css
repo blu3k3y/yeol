@@ -368,12 +368,21 @@ a {
 .original {
   margin: 0;
 }
+.detail__media--after {
+  margin-top: 64px;
+  gap: 32px;
+}
 .original img {
   width: auto;
   height: auto;
   max-width: 100%;
   max-height: calc(100vh - 160px);
   max-height: calc(100dvh - 160px);
+}
+.original img[style*="--ar"] {
+  aspect-ratio: var(--ar);
+  width: min(100%, calc((100vh - 160px) * var(--ar)));
+  width: min(100%, calc((100dvh - 160px) * var(--ar)));
 }
 .detail__title {
   margin: 36px 0 0;

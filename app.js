@@ -46,7 +46,8 @@ function media(src, alt, ratio, { eager = false, label = "IMAGE" } = {}) {
 function original(src, alt, ratio, label, eager = true) {
   if (!src) return media("", alt, ratio || "4/3", { label });
   const [w, h] = String(ratio || "").split("/").map(Number);
-  const size = w && h ? `width="${Math.round(w)}" height="${Math.round(h)}"` : "";
+  // 로딩 전에도 자리를 확보해서 화면이 튀지 않게
+  const size = w && h ? `width="${Math.round(w)}" height="${Math.round(h)}" style="--ar:${w / h}"` : "";
   return `<figure class="original">
     <img src="${esc(src)}" alt="${esc(alt)}" ${size} ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" />
   </figure>`;
@@ -162,15 +163,18 @@ function viewProjectDetail(id) {
   if (i < 0) return viewNotFound();
   const p = projects[i];
   document.title = `${p.title} — ${site.name}`;
-  const imgs = (p.images && p.images.length ? p.images : [{ src: p.cover, alt: p.title, ratio: p.coverRatio }])
-    .map((im, k) => original(im.src, im.alt || p.title, im.ratio, p.title, k === 0))
+  // 위: 표지 → 제목/태그/설명 → 아래: 상세 이미지
+  const images = (p.images || []).filter((im) => im.src);
+  const gallery = images
+    .map((im) => original(im.src, im.alt || p.title, im.ratio, p.title, false))
     .join("");
   return `<article class="page page--detail">
     <a class="detail__back" href="/projects" data-link>${arrowLeft}PROJECT</a>
-    <div class="detail__media">${imgs}</div>
+    <div class="detail__media">${original(p.cover, p.title, p.coverRatio, p.title)}</div>
     <h1 class="detail__title">${esc(p.title)}</h1>
     ${tags(p.tags)}
     ${p.description ? `<p class="detail__desc">${esc(p.description)}</p>` : ""}
+    ${gallery ? `<div class="detail__media detail__media--after">${gallery}</div>` : ""}
     ${pager(projects, i, "/projects")}
   </article>`;
 }
