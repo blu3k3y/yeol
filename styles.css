@@ -75,6 +75,7 @@ a {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   min-height: 100vh;
+  overflow-x: clip; /* 메인 카드를 던질 때 가로 스크롤 방지 */
 }
 
 .sidebar {
@@ -150,6 +151,7 @@ a {
 .contact {
   margin-top: auto;
   font-size: 22px;
+  white-space: nowrap;
 }
 
 .content {
@@ -237,52 +239,124 @@ a {
 .page--main {
   height: 100vh;
   height: 100dvh;
+  max-width: 899px;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 56px 0 40px;
   animation-name: fade-in; /* 이동 애니메이션은 순간 스크롤바를 만들어서 페이드만 */
 }
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.page--main {
-  max-width: 899px;
-}
-.hero {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr);
-  width: 100%;
-  height: min(680px, calc(100% - 96px));
-  background: var(--c-placeholder);
-}
-.hero > * {
-  grid-area: 1 / 1;
-  min-height: 0;
-}
-.hero .media {
-  height: 100%;
-  aspect-ratio: auto !important;
-}
-.hero__text {
+
+/* 카드 스택 — 각 카드는 원본 비율(--ar = 가로/세로) 그대로, 영역 안에 맞춤 */
+.stack {
   position: relative;
-  align-self: center;
-  max-height: 100%;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 640px;
+  container-type: size;
+  outline: none;
+  touch-action: pan-y;
+}
+.stack:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 6px;
+}
+.stack__card {
+  --w: min(100cqw, (100cqh - 56px) * var(--ar));
+  --h: calc(var(--w) / var(--ar));
+  position: absolute;
+  left: calc(50% - var(--w) / 2);
+  top: calc(50% - var(--h) / 2 + 28px);
+  width: var(--w);
+  height: var(--h);
+  transform-origin: 50% 100%;
+}
+/* Motion 이 준비되기 전 첫 화면: 겹친 카드만 */
+.stack:not(.is-ready) .stack__card:not(:first-child) {
+  opacity: 0;
+}
+.stack__inner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--c-placeholder);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px -8px rgba(0, 0, 0, 0.18);
+}
+.stack__inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.stack__card[data-top] .stack__inner {
+  cursor: grab;
+}
+.stack.is-dragging .stack__inner {
+  cursor: grabbing;
+}
+.stack__empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #a6a6a6;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.stack__controls {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.stack__btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #e3e3e3;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--c-fg);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.stack__btn:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.stack__btn:active {
+  transform: scale(0.94);
+}
+.stack__count {
+  min-width: 56px;
+  text-align: center;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-soft);
+}
+
+.main-text {
+  flex: none;
+  max-width: 60ch;
+  max-height: 28%;
+  margin: 0;
   overflow-y: auto;
-  padding: 56px clamp(24px, 6vw, 88px);
   text-align: center;
   white-space: pre-line;
-  font-size: clamp(18px, 1.7vw, 26px);
+  font-size: clamp(16px, 1.3vw, 19px);
   line-height: 1.7;
-  letter-spacing: -0.01em;
-  color: var(--c-fg);
-}
-.hero--image .hero__text {
-  align-self: stretch;
-  display: flex;
-  align-items: flex-end;
-  text-align: left;
-  color: #fff;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 60%);
+  color: var(--c-text-soft);
 }
 
 /* ───────── GALLERY (2단 메이슨리) ───────── */
@@ -528,13 +602,8 @@ a {
   .page--main {
     height: calc(100vh - 80px);
     height: calc(100dvh - 80px); /* 상단 바 높이 */
-  }
-  .hero {
-    height: auto;
-    max-height: calc(100% - 32px);
-  }
-  .hero .media {
-    aspect-ratio: 899 / 680 !important;
+    padding: 28px 0 20px;
+    gap: 14px;
   }
   .page--gallery,
   .page--projects {

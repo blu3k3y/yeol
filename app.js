@@ -67,16 +67,49 @@ const ratioValue = (r = "1/1") => {
 
 /* ───────── Views ───────── */
 
+function mainImages(m = {}) {
+  if (Array.isArray(m.images)) return m.images.filter((im) => im && im.src);
+  return m.image ? [{ src: m.image, alt: m.alt, ratio: m.ratio }] : []; // 예전 단일 이미지 형식
+}
+
+const arrowL = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>`;
+const arrowR = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>`;
+
 function viewMain() {
   document.title = `${site.name} 포트폴리오`;
   const m = site.main || {};
   const text = (m.text || "").trim();
-  const hasImage = Boolean(m.image);
+  const images = mainImages(m);
+  // 이미지가 없으면 자리표시 카드 3장
+  const list = images.length ? images : [{}, {}, {}];
+
+  const cards = list
+    .map((im, i) => {
+      const ar = ratioValue(im.ratio || "4/5");
+      const body = im.src
+        ? `<img src="${esc(im.src)}" alt="${esc(im.alt || "")}" draggable="false" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" />`
+        : `<span class="stack__empty">MAIN</span>`;
+      return `<div class="stack__card" style="--ar:${1 / ar}" data-index="${i}">
+        <div class="stack__inner">${body}</div>
+      </div>`;
+    })
+    .join("");
+
+  const many = list.length > 1;
   return `<section class="page page--main" aria-label="메인">
-    <div class="hero${hasImage ? " hero--image" : ""}${text ? " hero--text" : ""}">
-      ${media(m.image, m.alt || "", m.ratio || "899/680", { eager: true, label: text ? "" : "MAIN" })}
-      ${text ? `<div class="hero__text">${esc(text)}</div>` : ""}
+    <div class="stack" tabindex="${many ? 0 : -1}" aria-roledescription="carousel" aria-label="대표 작품${many ? " — 카드를 옆으로 넘기거나 ←/→ 키로 넘길 수 있습니다" : ""}">
+      ${cards}
     </div>
+    ${
+      many
+        ? `<div class="stack__controls">
+      <button type="button" class="stack__btn" data-stack="prev" aria-label="이전 작품">${arrowL}</button>
+      <span class="stack__count" aria-live="polite"><span data-current>1</span> / ${list.length}</span>
+      <button type="button" class="stack__btn" data-stack="next" aria-label="다음 작품">${arrowR}</button>
+    </div>`
+        : ""
+    }
+    ${text ? `<p class="main-text">${esc(text)}</p>` : ""}
   </section>`;
 }
 
@@ -201,9 +234,25 @@ function resolve(path) {
   return { view: viewNotFound(), section: null };
 }
 
+let stackCleanup = null;
+
 function render({ focus = false } = {}) {
   const { view, section } = resolve(location.pathname);
+  stackCleanup?.then((fn) => fn());
+  stackCleanup = null;
   main.innerHTML = view;
+
+  const stack = main.querySelector(".stack");
+  if (stack) {
+    const current = main.querySelector("[data-current]");
+    stackCleanup = import("./stack.js").then(({ mountStack }) =>
+      mountStack(stack, {
+        onChange: (idx) => {
+          if (current) current.textContent = String(idx + 1);
+        },
+      }),
+    );
+  }
 
   document.querySelectorAll(".nav__link").forEach((a) => {
     if (a.dataset.section === section) a.setAttribute("aria-current", "page");

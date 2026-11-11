@@ -101,11 +101,18 @@ function renderLogin(configured) {
 async function startEditor() {
   const { content } = await api("/api/content?fresh=1");
   state = content || {
-    site: { ...structuredClone(defaults.site), main: { text: "", ...structuredClone(defaults.site.main) } },
+    site: { ...structuredClone(defaults.site), main: { text: "", images: [], ...structuredClone(defaults.site.main) } },
     gallery: structuredClone(defaults.gallery),
     projects: structuredClone(defaults.projects),
   };
   state.site.main ||= {};
+  const m = state.site.main;
+  if (!Array.isArray(m.images)) {
+    m.images = m.image ? [{ src: m.image, alt: m.alt || "", ratio: m.ratio || "4/5" }] : [];
+  }
+  delete m.image;
+  delete m.alt;
+  delete m.ratio;
   render();
   markDirty(false);
 }
@@ -181,17 +188,37 @@ function itemActions(list, i, total) {
   </div>`;
 }
 
+function thumbs(listPath, addLabel = "+ 이미지 추가") {
+  const images = getPath(listPath) || [];
+  return `<div class="thumbs">
+      ${images
+        .map(
+          (im, k) => `<div class="thumb">
+        <div class="picker__box">${im.src ? `<img src="${esc(im.src)}" alt="" />` : "이미지 없음"}</div>
+        <div class="thumb__row">
+          <button class="btn btn--sm btn--icon" type="button" data-action="move" data-list="${listPath}" data-index="${k}" data-dir="-1" ${k === 0 ? "disabled" : ""} aria-label="앞으로">←</button>
+          <button class="btn btn--sm btn--icon" type="button" data-action="move" data-list="${listPath}" data-index="${k}" data-dir="1" ${k === images.length - 1 ? "disabled" : ""} aria-label="뒤로">→</button>
+          <button class="btn btn--sm btn--danger" type="button" data-action="remove" data-list="${listPath}" data-index="${k}" data-silent="1">삭제</button>
+        </div>
+      </div>`,
+        )
+        .join("")}
+    </div>
+    <div><button class="btn btn--sm" type="button" data-action="pick-many" data-list="${listPath}">${addLabel}</button></div>`;
+}
+
 /* ───────── Panels ───────── */
 
 function panelMain() {
+  const count = (state.site.main.images || []).length;
   return `<div class="panel__head"><h2>메인 화면</h2></div>
-    <p class="panel__hint">메인 화면의 큰 박스에 보이는 글과 이미지입니다. 이미지가 있으면 글이 이미지 위에 겹쳐 보입니다.</p>
-    <section class="card">
-      ${picker("site.main.image", "site.main.ratio", "배경 이미지 (선택)")}
-      <div class="fields">
-        ${textarea("박스 안 글", "site.main.text", { tall: true, placeholder: "메인 화면에 보여줄 글을 입력하세요.\n줄바꿈도 그대로 보입니다." })}
-        ${input("이미지 대체 텍스트", "site.main.alt", { placeholder: "이미지를 설명하는 짧은 문장" })}
+    <p class="panel__hint">대표 작품들이 카드처럼 겹쳐 보이고, 넘기면 다음 작품이 나옵니다. 첫 번째 이미지가 맨 위 카드입니다. 글은 카드 아래에 보입니다.</p>
+    <section class="card card--single">
+      <div class="field">
+        <span class="field__label">대표 작품 이미지 (${count}장)</span>
+        ${thumbs("site.main.images", "+ 대표 작품 추가")}
       </div>
+      ${textarea("카드 아래 글", "site.main.text", { tall: true, placeholder: "메인 화면 카드 아래에 보여줄 글을 입력하세요.\n줄바꿈도 그대로 보입니다." })}
     </section>`;
 }
 
@@ -240,21 +267,7 @@ function panelProjects() {
         ${textarea("설명", `projects.${i}.description`, { tall: true })}
         <div class="field">
           <span class="field__label">상세 이미지 (${images.length}장)</span>
-          <div class="thumbs">
-            ${images
-              .map(
-                (im, k) => `<div class="thumb">
-              <div class="picker__box">${im.src ? `<img src="${esc(im.src)}" alt="" />` : "이미지 없음"}</div>
-              <div class="thumb__row">
-                <button class="btn btn--sm btn--icon" type="button" data-action="move" data-list="projects.${i}.images" data-index="${k}" data-dir="-1" ${k === 0 ? "disabled" : ""} aria-label="앞으로">←</button>
-                <button class="btn btn--sm btn--icon" type="button" data-action="move" data-list="projects.${i}.images" data-index="${k}" data-dir="1" ${k === images.length - 1 ? "disabled" : ""} aria-label="뒤로">→</button>
-                <button class="btn btn--sm btn--danger" type="button" data-action="remove" data-list="projects.${i}.images" data-index="${k}" data-silent="1">삭제</button>
-              </div>
-            </div>`,
-              )
-              .join("")}
-          </div>
-          <div><button class="btn btn--sm" type="button" data-action="pick-many" data-list="projects.${i}.images">+ 이미지 추가</button></div>
+          ${thumbs(`projects.${i}.images`)}
         </div>
       </div>
       ${itemActions("projects", i, list.length)}

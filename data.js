@@ -10,9 +10,9 @@ export const site = {
   logo: "", // 예: "/images/logo.png" (비우면 이름 텍스트 표시)
   email: "hello@example.com", // CONTACT ME 클릭 시 메일 주소
   main: {
-    image: "", // 메인 화면 대표 이미지
-    alt: "대표 작업 이미지",
-    ratio: "899/680",
+    // 메인 카드 스택에 보일 대표 작품들. 예: { src: "/images/a.jpg", alt: "작품 설명", ratio: "4/5" }
+    images: [],
+    text: "", // 카드 아래에 보이는 글
   },
 };
 
