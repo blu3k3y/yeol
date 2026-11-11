@@ -1,4 +1,20 @@
-import { site, gallery, projects } from "./data.js";
+import * as defaults from "./data.js";
+
+// 관리자 페이지에서 저장한 콘텐츠(/api/content)를 우선 사용, 없으면 data.js 기본값
+let site = defaults.site;
+let gallery = defaults.gallery;
+let projects = defaults.projects;
+
+async function loadContent() {
+  try {
+    const res = await fetch("/api/content");
+    if (!res.ok) return;
+    const { content } = await res.json();
+    if (content) ({ site, gallery, projects } = content);
+  } catch {
+    /* API 없음(정적 미리보기 등) → 기본값 유지 */
+  }
+}
 
 const main = document.getElementById("main");
 const esc = (s = "") =>
@@ -31,7 +47,6 @@ function tags(list = []) {
   return `<ul class="tags" aria-label="태그">${list.map((t) => `<li class="tag">${esc(t)}</li>`).join("")}</ul>`;
 }
 
-const arrowDown = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
 const arrowLeft = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`;
 
 const ratioValue = (r = "1/1") => {
@@ -44,8 +59,13 @@ const ratioValue = (r = "1/1") => {
 function viewMain() {
   document.title = `${site.name} 포트폴리오`;
   const m = site.main || {};
+  const text = (m.text || "").trim();
+  const hasImage = Boolean(m.image);
   return `<section class="page page--main" aria-label="메인">
-    ${media(m.image, m.alt, m.ratio, { eager: true, label: "MAIN" })}
+    <div class="hero${hasImage ? " hero--image" : ""}${text ? " hero--text" : ""}">
+      ${media(m.image, m.alt || "", m.ratio || "899/680", { eager: true, label: text ? "" : "MAIN" })}
+      ${text ? `<div class="hero__text">${esc(text)}</div>` : ""}
+    </div>
   </section>`;
 }
 
@@ -94,7 +114,6 @@ function viewProjects() {
       <div class="stagger__col stagger__col--right">
         <div class="stagger__head">
           <h1 class="page-title">PROJECTS</h1>
-          ${projects.length > 1 ? `<p class="scroll-hint">${arrowDown}<span>아래로 스크롤</span></p>` : ""}
         </div>
         ${right.join("")}
       </div>
@@ -201,5 +220,6 @@ document.addEventListener("click", (e) => {
 
 window.addEventListener("popstate", () => render());
 
+await loadContent();
 initShell();
 render();

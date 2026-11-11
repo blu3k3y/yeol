@@ -237,8 +237,36 @@ a {
 .page--main {
   max-width: 899px;
 }
-.page--main .media {
+.hero {
+  display: grid;
+  width: 100%;
   margin-top: 73px; /* 와이어프레임 y=172 */
+  background: var(--c-placeholder);
+}
+.hero > * {
+  grid-area: 1 / 1;
+}
+.hero .media {
+  height: 100%;
+}
+.hero__text {
+  position: relative;
+  align-self: center;
+  padding: 56px clamp(24px, 6vw, 88px);
+  text-align: center;
+  white-space: pre-line;
+  font-size: clamp(18px, 1.7vw, 26px);
+  line-height: 1.7;
+  letter-spacing: -0.01em;
+  color: var(--c-fg);
+}
+.hero--image .hero__text {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-end;
+  text-align: left;
+  color: #fff;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 60%);
 }
 
 /* ───────── GALLERY (2단 메이슨리) ───────── */
@@ -295,23 +323,6 @@ a {
 }
 .stagger__head {
   padding: 74px 0 70px 50px;
-}
-.scroll-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 40px;
-  margin-left: 236px;
-  white-space: nowrap;
-  font-size: 22px;
-  color: var(--c-text-soft);
-}
-.scroll-hint svg {
-  animation: nudge 1.8s ease-in-out infinite;
-}
-@keyframes nudge {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(4px); }
 }
 
 /* ───────── DETAIL ───────── */
@@ -428,9 +439,6 @@ a {
   .stagger__head {
     padding-left: 0;
   }
-  .scroll-hint {
-    margin-left: 0;
-  }
   .page-title {
     font-size: 40px;
   }
@@ -485,7 +493,7 @@ a {
   .page--main {
     min-height: 0;
   }
-  .page--main .media,
+  .hero,
   .page--gallery,
   .page--projects {
     margin-top: 0;
@@ -517,10 +525,6 @@ a {
   .stagger__head {
     order: -1;
     padding: 0;
-  }
-  .scroll-hint {
-    margin-top: 12px;
-    font-size: 16px;
   }
   .detail__back {
     margin-top: -16px;
